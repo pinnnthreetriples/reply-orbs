@@ -107,7 +107,7 @@ namespace ReplyOrbs {
             if (store.Warning != null) Status(store.Warning);
             if (fixture) OpenFixture();
         }
-        internal void CreateDock(Func<bool> motion = null) {
+        internal void CreateDock() {
             bar = Ui.Window("Reply Orbs", double.NaN, false); bar.ShowInTaskbar = fixture; bar.SizeToContent = SizeToContent.WidthAndHeight; Ui.NoActivate(bar, !fixture);
             var stack = new StackPanel { Margin = new Thickness(8), Background = Ui.HoverBridge };
             row = new WrapPanel { MaxWidth = SystemParameters.WorkArea.Width - 40, HorizontalAlignment = HorizontalAlignment.Left };
@@ -118,7 +118,7 @@ namespace ReplyOrbs {
             toast = Ui.Text("", 11, Ui.Cream); toast.TextWrapping = TextWrapping.NoWrap; toast.TextTrimming = TextTrimming.CharacterEllipsis; toast.VerticalAlignment = VerticalAlignment.Center; toast.TextAlignment = TextAlignment.Center;
             undo = Ui.Button("Восстановить", Undo); undo.Background = Ui.HoverBridge; undo.MinHeight = 22; undo.Padding = new Thickness(6, 2, 6, 2); undo.Visibility = Visibility.Collapsed;
             statusRow.Children.Add(toast); Grid.SetColumn(undo, 1); statusRow.Children.Add(undo); stack.Children.Add(statusRow);
-            dock = new ReplyDock(bar, stack, motion); bar.Content = dock;
+            dock = new ReplyDock(bar, stack); bar.Content = dock;
             Render();
         }
         internal void ShowDock() {
