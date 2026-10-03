@@ -178,7 +178,13 @@ namespace ReplyOrbs {
         static async Task OfferLifetime(Application app, string root) {
             var backend = new QaBackend();
             using (var c = new Controller(app, new Store(root), true, new DeepSeek(backend), delegate { return "synthetic-key"; }, delegate(string text, CancellationToken ct) { return Task.FromResult(9u); })) {
-                var point = new Native.Point { X = 100, Y = 100 };
+                Native.Point pointer; Native.GetCursorPos(out pointer);
+                var area = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea;
+                // Success expiry intentionally pauses on real hover; keep this fixture away from the host pointer.
+                var point = new Native.Point {
+                    X = pointer.X < area.Left + area.Width / 2 ? area.Right - 160 : area.Left + 160,
+                    Y = pointer.Y < area.Top + area.Height / 2 ? area.Bottom - 160 : area.Top + 160
+                };
                 foreach (var phase in new[] { "ready", "error", "success", "cancel" }) {
                     c.SelectQuestion("Synthetic " + phase, new IntPtr(17), point, Rect.Empty);
                     if (phase != "ready") {
@@ -211,9 +217,12 @@ namespace ReplyOrbs {
                 }
                 stale = (StackPanel)OfferWindow().Content;
                 c.SelectQuestion("Expiry owner", new IntPtr(17), point, Rect.Empty);
+                await Settle(delegate { return !OfferWindow().IsMouseOver; });
+                if (OfferWindow().IsMouseOver) throw new Exception("Success expiry fixture is unexpectedly under the physical pointer.");
                 var success = c.GenerateAsync(); backend.Complete(false); await success;
                 var successVisual = c.generationVisual; Hover(stale, true); Hover(stale, false);
                 await Task.Delay(4300);
+                await Settle(delegate { return c.generationVisual == null; });
                 Check(c.generationVisual == null && !successVisual.HasAnimations, "Stale hover cannot stop replacement success expiry timer");
                 c.SelectQuestion("Current hover", new IntPtr(17), point, Rect.Empty);
                 success = c.GenerateAsync(); backend.Complete(false); await success;
