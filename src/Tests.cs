@@ -251,20 +251,23 @@ namespace ReplyOrbs {
             while (!condition() && DateTime.UtcNow < deadline) await Task.Delay(16);
         }
         static async Task DockTransitions(Application app, string root) {
-            var store = new Store(root); var initial = State.Initial(); initial.Left = 800; initial.Top = 100; store.Save(initial);
+            var store = new Store(root); var initial = State.Initial(); var workArea = SystemParameters.WorkArea;
+            initial.Left = Math.Round(workArea.Left + workArea.Width / 3); initial.Top = Math.Round(workArea.Top + workArea.Height / 5); store.Save(initial);
             using (var c = new Controller(app, store, true)) {
                 c.CreateDock(); var w = c.DockWindow;
                 // Hover is raised synthetically; the desktop pointer must not hold this test dock open.
                 w.IsHitTestVisible = false; c.ShowDock(); await Task.Delay(100);
                 var dock = c.Dock; var shelf = (FrameworkElement)dock.Children[0];
                 Check(dock.IsIdle && w.ActualWidth == 72 && w.ActualHeight == 25 && shelf.Visibility == Visibility.Collapsed, "Idle native window is 72x25 DIP and excludes shelf, replies, dots and status from layout (actual " + w.ActualWidth + "x" + w.ActualHeight + ")");
-                Check(Math.Abs(w.Left - 800) < 1 && Math.Abs(w.Top - 100) < 1, "Initial asynchronous native sizing preserves saved idle position without startup drift");
+                Check(Math.Abs(w.Left - initial.Left.Value) < 1 && Math.Abs(w.Top - initial.Top.Value) < 1, "Initial asynchronous native sizing preserves saved idle position without startup drift");
                 var strip = (Border)((Border)dock.Handle).Child;
                 Check(strip.ActualWidth == 56 && strip.ActualHeight == 9 && strip.CornerRadius.TopLeft == 4.5, "Idle handle has a 56x9 DIP straight strip with round ends");
                 var foreground = Native.GetForegroundWindow(); var sequence = Native.GetClipboardSequenceNumber();
-                Hover(dock, true); await Task.Delay(370);
+                Hover(dock, true);
+                var hoverPreservedDesktop = Native.GetForegroundWindow() == foreground && Native.GetClipboardSequenceNumber() == sequence;
+                await Task.Delay(370);
                 Check(dock.Expanded && !dock.IsIdle && shelf.Opacity == 1 && w.ActualWidth < 400 && w.ActualHeight <= 80, "MouseEnter reveals compact shelf without a large transparent host or blank status row");
-                Check(Native.GetForegroundWindow() == foreground && Native.GetClipboardSequenceNumber() == sequence, "Hover expansion neither activates a window nor changes the clipboard");
+                Check(hoverPreservedDesktop && !w.IsActive, "Hover expansion neither activates a window nor changes the clipboard");
                 Hover(dock, false); await Task.Delay(100); Check(dock.Expanded && dock.PendingCollapse, "MouseLeave keeps shelf during 220ms grace period");
                 Hover(dock, true); await Task.Delay(300); Check(dock.Expanded && !dock.PendingCollapse, "Reentry cancels scheduled collapse");
                 Hover(dock, false); var fadeDeadline = DateTime.UtcNow.AddSeconds(2);
