@@ -39,6 +39,9 @@ if ($Test) {
     $runRoot = Join-Path $testRoot ([Guid]::NewGuid().ToString('N'))
     $reportPath = Join-Path $projectRoot 'verification.txt'
     $testProcess = Start-Process -FilePath $exePath -ArgumentList @('--self-test','--report',('"' + $reportPath + '"'),'--test-root',('"' + $runRoot + '"')) -WindowStyle Hidden -Wait -PassThru
-    if ($testProcess.ExitCode -ne 0) { throw ('Verification failed: ' + $reportPath) }
+    if ($testProcess.ExitCode -ne 0) {
+        if (Test-Path -LiteralPath $reportPath) { Get-Content -LiteralPath $reportPath -Encoding UTF8 | Write-Output }
+        throw ('Verification failed: ' + $reportPath)
+    }
     Get-Content -LiteralPath $reportPath -Encoding UTF8
 }

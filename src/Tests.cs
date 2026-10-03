@@ -271,7 +271,8 @@ namespace ReplyOrbs {
                 while (DateTime.UtcNow < fadeDeadline && (dock.Expanded || shelf.Opacity >= 1)) await Task.Delay(16);
                 var opacity = shelf.Opacity;
                 Check(!dock.Expanded && (!Ui.Motion || opacity > 0 && opacity < 1), "After grace period shelf is sampled during its closing fade (expanded " + dock.Expanded + ", opacity " + opacity + ", mouse over " + dock.IsMouseOver + ", active " + w.IsActive + ", keyboard focus " + dock.IsKeyboardFocusWithin + ")");
-                Hover(dock, true); Check(Math.Abs(shelf.Opacity - opacity) < .12, "Reentry reverses opacity from the current frame without jumping to zero or one");
+                var reverseTime = System.Diagnostics.Stopwatch.StartNew(); Hover(dock, true); var reversedOpacity = shelf.Opacity;
+                Check(Math.Abs(reversedOpacity - opacity) < .12, "Reentry reverses opacity from the current frame without jumping to zero or one (" + opacity + " -> " + reversedOpacity + ", " + reverseTime.ElapsedMilliseconds + " ms)");
                 await Task.Delay(370); Hover(dock, false); await Settle(delegate { return dock.IsIdle && w.ActualWidth == 72 && w.ActualHeight == 25; });
                 Check(dock.IsIdle && w.ActualWidth == 72 && w.ActualHeight == 25 && !dock.PendingCollapse && !shelf.HasAnimatedProperties, "Collapse returns to small native window and releases opacity clock and timers (idle " + dock.IsIdle + ", actual " + w.ActualWidth + "x" + w.ActualHeight + ", pending " + dock.PendingCollapse + ", animated " + shelf.HasAnimatedProperties + ")");
                 Hover(dock, true); await Task.Delay(370); var restBefore = dock.RestPosition; dock.BeginMove(); Hover(dock, false); await Task.Delay(440);
