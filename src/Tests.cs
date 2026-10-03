@@ -295,8 +295,9 @@ namespace ReplyOrbs {
                 Check(!dock.PendingCollapse && dock.PinCount == 0, "Disposed dock ignores stale hover and retains no child pins or timers");
             }
             using (var c = new Controller(app, store, true)) {
-                c.CreateDock(); c.ShowDock(); await Task.Delay(100);
-                Check(Math.Abs(c.DockWindow.Left - initial.Left.Value) < 1 && Math.Abs(c.DockWindow.Top - initial.Top.Value) < 1, "Restart restores dragged position without another size-dependent offset");
+                c.CreateDock(); c.DockWindow.IsHitTestVisible = false; c.ShowDock();
+                await Settle(delegate { return c.Dock.IsIdle && Math.Abs(c.DockWindow.Left - initial.Left.Value) < 1 && Math.Abs(c.DockWindow.Top - initial.Top.Value) < 1; });
+                Check(c.Dock.IsIdle && Math.Abs(c.DockWindow.Left - initial.Left.Value) < 1 && Math.Abs(c.DockWindow.Top - initial.Top.Value) < 1, "Restart restores dragged position without another size-dependent offset (expected " + initial.Left + ", " + initial.Top + "; actual " + c.DockWindow.Left + ", " + c.DockWindow.Top + "; idle " + c.Dock.IsIdle + "; size " + c.DockWindow.ActualWidth + "x" + c.DockWindow.ActualHeight + ")");
             }
             var state = State.Initial(); state.Size = 54; state.Replies.Clear();
             for (int i = 0; i < 150; i++) state.Replies.Add(new Reply { Name = "Synthetic " + i, Text = "Synthetic", Icon = "file" });
