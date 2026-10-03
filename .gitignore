@@ -1,0 +1,29 @@
+# Local builds and verification
+/ReplyOrbs.exe
+/verification.txt
+/artifacts/
+/work/
+/outputs/
+/bin/
+/obj/
+*.pdb
+*.zip
+
+# Runtime data and credentials
+replies.json*
+*.dpapi
+*.key
+*.pem
+.env
+.env.*
+!.env.example
+Files/
+Notes/
+
+# Editor and OS state
+.vs/
+.idea/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
