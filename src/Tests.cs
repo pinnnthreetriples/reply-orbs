@@ -253,7 +253,8 @@ namespace ReplyOrbs {
         static async Task DockTransitions(Application app, string root) {
             var store = new Store(root); var initial = State.Initial(); initial.Left = 800; initial.Top = 100; store.Save(initial);
             using (var c = new Controller(app, store, true)) {
-                c.CreateDock(); var w = c.DockWindow;
+                // Exercise animation even on CI hosts whose system preference disables it.
+                c.CreateDock(delegate { return true; }); var w = c.DockWindow;
                 // Hover is raised synthetically; the desktop pointer must not hold this test dock open.
                 w.IsHitTestVisible = false; c.ShowDock(); await Task.Delay(100);
                 var dock = c.Dock; var shelf = (FrameworkElement)dock.Children[0];
@@ -270,7 +271,7 @@ namespace ReplyOrbs {
                 Hover(dock, false); var fadeDeadline = DateTime.UtcNow.AddSeconds(2);
                 while (DateTime.UtcNow < fadeDeadline && (dock.Expanded || shelf.Opacity >= 1)) await Task.Delay(16);
                 var opacity = shelf.Opacity;
-                Check(!dock.Expanded && (!Ui.Motion || opacity > 0 && opacity < 1), "After grace period shelf is sampled during its closing fade (expanded " + dock.Expanded + ", opacity " + opacity + ", mouse over " + dock.IsMouseOver + ", active " + w.IsActive + ", keyboard focus " + dock.IsKeyboardFocusWithin + ")");
+                Check(!dock.Expanded && opacity > 0 && opacity < 1, "After grace period shelf is sampled during its closing fade (expanded " + dock.Expanded + ", opacity " + opacity + ", mouse over " + dock.IsMouseOver + ", active " + w.IsActive + ", keyboard focus " + dock.IsKeyboardFocusWithin + ")");
                 var reverseTime = System.Diagnostics.Stopwatch.StartNew(); Hover(dock, true); var reversedOpacity = shelf.Opacity;
                 Check(Math.Abs(reversedOpacity - opacity) < .12, "Reentry reverses opacity from the current frame without jumping to zero or one (" + opacity + " -> " + reversedOpacity + ", " + reverseTime.ElapsedMilliseconds + " ms)");
                 await Task.Delay(370); Hover(dock, false); await Settle(delegate { return dock.IsIdle && w.ActualWidth == 72 && w.ActualHeight == 25; });

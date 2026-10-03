@@ -11,7 +11,7 @@ Windows x64 with .NET Framework 4.8 is required. The compiler and framework asse
 ./build.ps1 -Test
 ```
 
-The build treats compiler warnings as errors. The test suite runs at least 157 checks covering storage, attachments, DPAPI, clipboard payloads, async generation, paste consent and WPF state transitions. It uses synthetic profiles and HTTP handlers, without a real API key or external API calls. Output is `ReplyOrbs.exe`; test results are in `verification.txt`. Both are ignored by Git.
+The build treats compiler warnings as errors. The test suite runs at least 157 checks covering storage, attachments, DPAPI, clipboard payloads, async generation, paste consent and WPF state transitions. Dock tests explicitly exercise both animation and reduced motion, independent of the host's desktop preferences. It uses synthetic profiles and HTTP handlers, without a real API key or external API calls. Output is `ReplyOrbs.exe`; test results are in `verification.txt`. Both are ignored by Git.
 
 ## CI and main
 
